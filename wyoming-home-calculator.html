@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wyoming Home Calculator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one narrow column; tabs on top; inputs left, result card right on wide screens, stacked on phones */
+:root{
+  --bg:#f6f4f2; --panel:#ffffff; --ink:#1b1d24; --muted:#5d6170; --line:#e3dfdb;
+  --red:#b8102a; --redsoft:#f8e6e9; --good:#1f7a4a;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Source Sans 3","Segoe UI",Arial,sans-serif;
+  --mono:"IBM Plex Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14161c; --panel:#1d2029; --ink:#eef0f4; --muted:#a3a8b6; --line:#2f3340; --red:#ff5a6e; --redsoft:#3a1f26; --good:#5fd39a; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14161c; --panel:#1d2029; --ink:#eef0f4; --muted:#a3a8b6; --line:#2f3340; --red:#ff5a6e; --redsoft:#3a1f26; --good:#5fd39a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+.wrap{max-width:920px;margin:0 auto;display:grid;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px;border-bottom:3px solid var(--red);padding-bottom:12px}
+h1{font:700 2.4rem/1 var(--display);letter-spacing:.5px;margin:0;text-transform:uppercase;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0}
+.brand{font:600 .85rem var(--body);color:var(--muted);text-align:right}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{font:600 1rem var(--body);padding:10px 16px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--red);border-color:var(--red);color:#fff}
+.tabs button:focus-visible,input:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:20px;align-items:start}
+@media (max-width:720px){.grid{grid-template-columns:minmax(0,1fr)}}
+.inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:460px){.inputs{grid-template-columns:minmax(0,1fr)}}
+label{display:grid;gap:4px;font-weight:600;font-size:.92rem}
+label small{font-weight:400;color:var(--muted)}
+input{font:500 1rem var(--mono);padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);width:100%}
+.result{background:var(--panel);border:1px solid var(--line);border-top:6px solid var(--red);border-radius:8px;padding:18px;display:grid;gap:10px}
+.big{font:700 3rem/1 var(--display);font-variant-numeric:tabular-nums}
+.big small{font:600 1rem var(--body);color:var(--muted)}
+.rows{display:grid;gap:6px;font-variant-numeric:tabular-nums}
+.row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dashed var(--line);padding-bottom:4px}
+.row span:last-child{font-family:var(--mono)}
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--line)}
+.bar i{display:block;height:100%}
+.note{font-size:.85rem;color:var(--muted)}
+.pill{display:inline-block;background:var(--redsoft);color:var(--red);font-weight:600;font-size:.8rem;padding:2px 8px;border-radius:99px}
+footer{border-top:1px solid var(--line);padding-top:14px;font-size:.85rem;color:var(--muted);display:grid;gap:6px}
+.contact{font:600 1rem var(--body);color:var(--ink)}
+.contact b{font-family:var(--mono);user-select:all}
+</style>
+<style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Wyoming Home Calculator</h1>
+      <p class="sub">Newcastle, Upton and northeast Wyoming. Change any number and the totals update.</p>
+    </div>
+    <div class="brand">Teigen Marchant, REALTOR®<br>Marchant WYO Realty / KW Black Hills</div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="t-buy" aria-selected="true" aria-controls="p-buy">Monthly payment</button>
+    <button role="tab" id="t-aff" aria-selected="false" aria-controls="p-aff">What can I afford?</button>
+    <button role="tab" id="t-sell" aria-selected="false" aria-controls="p-sell">Seller net</button>
+  </div>
+
+  <!-- BUYER PAYMENT -->
+  <section id="p-buy" role="tabpanel" class="grid">
+    <div class="inputs">
+      <label>Home price ($)<input id="b-price" type="number" inputmode="decimal" value="250000" step="1000"></label>
+      <label>Down payment (%)<input id="b-down" type="number" inputmode="decimal" value="5" step="0.5"></label>
+      <label>Interest rate (%)<small>30-yr average 7.18%, Freddie Mac, Nov 5 2026</small><input id="b-rate" type="number" inputmode="decimal" value="7.18" step="0.01"></label>
+      <label>Loan length (years)<input id="b-term" type="number" inputmode="numeric" value="30" step="5"></label>
+      <label>Property tax (% of price per year)<small>Estimate. Your county treasurer has the real number.</small><input id="b-tax" type="number" inputmode="decimal" value="0.55" step="0.05"></label>
+      <label>Home insurance ($ per year)<small>Estimate. Get a quote.</small><input id="b-ins" type="number" inputmode="decimal" value="1600" step="100"></label>
+      <label>Mortgage insurance (% per year)<small>Usually only if under 20% down</small><input id="b-pmi" type="number" inputmode="decimal" value="0.5" step="0.05"></label>
+      <label>HOA ($ per month)<input id="b-hoa" type="number" inputmode="decimal" value="0" step="10"></label>
+    </div>
+    <div class="result" aria-live="polite">
+      <span class="pill">Estimated monthly payment</span>
+      <div class="big" id="b-total">$0<small> /mo</small></div>
+      <div class="bar" id="b-bar"></div>
+      <div class="rows" id="b-rows"></div>
+      <p class="note" id="b-cash"></p>
+    </div>
+  </section>
+
+  <!-- AFFORDABILITY -->
+  <section id="p-aff" role="tabpanel" class="grid" hidden>
+    <div class="inputs">
+      <label>Household income ($ per year, before taxes)<input id="a-inc" type="number" inputmode="decimal" value="75000" step="1000"></label>
+      <label>Monthly debt payments ($)<small>Car, student loans, card minimums</small><input id="a-debt" type="number" inputmode="decimal" value="400" step="25"></label>
+      <label>Cash for down payment ($)<input id="a-cash" type="number" inputmode="decimal" value="15000" step="500"></label>
+      <label>Interest rate (%)<input id="a-rate" type="number" inputmode="decimal" value="7.18" step="0.01"></label>
+    </div>
+    <div class="result" aria-live="polite">
+      <span class="pill">Price range to look at</span>
+      <div class="big" id="a-price">$0</div>
+      <div class="rows" id="a-rows"></div>
+      <p class="note">Uses common lender guidelines: house payment up to 28% of income and all debts up to 36%, with the same tax, insurance and mortgage insurance estimates as the payment tab. A lender pre-approval gives your real number.</p>
+    </div>
+  </section>
+
+  <!-- SELLER NET -->
+  <section id="p-sell" role="tabpanel" class="grid" hidden>
+    <div class="inputs">
+      <label>Sale price ($)<input id="s-price" type="number" inputmode="decimal" value="275000" step="1000"></label>
+      <label>Mortgage payoff ($)<small>From your lender's payoff statement</small><input id="s-payoff" type="number" inputmode="decimal" value="120000" step="1000"></label>
+      <label>Real estate commission (%)<small>Set in your listing agreement</small><input id="s-comm" type="number" inputmode="decimal" value="0" step="0.25"></label>
+      <label>Title, deed and closing fees ($)<small>Estimate. Your title company gives the real number.</small><input id="s-title" type="number" inputmode="decimal" value="1800" step="100"></label>
+      <label>Property tax owed at closing ($)<small>Your share for this year</small><input id="s-tax" type="number" inputmode="decimal" value="1200" step="50"></label>
+      <label>Repairs or buyer credits ($)<input id="s-rep" type="number" inputmode="decimal" value="0" step="250"></label>
+    </div>
+    <div class="result" aria-live="polite">
+      <span class="pill">Estimated cash to you at closing</span>
+      <div class="big" id="s-net">$0</div>
+      <div class="rows" id="s-rows"></div>
+      <p class="note">Before any capital gains tax. Ask a tax pro about your situation.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="contact">Questions? Call or text Teigen: <b>307-941-0585</b> · tmarchant@kw.com · teigenmarchant.kw.com</div>
+    <div>Estimates only. This is not a loan offer, an appraisal or tax advice. Rates, taxes and insurance change; get real numbers from your lender, title company and county.</div>
+    <div>Not intended to solicit. If you are currently working with or listed with another real estate agent, please disregard.</div>
+  </footer>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const n=id=>{const v=parseFloat($(id).value);return isFinite(v)?v:0};
+const usd=v=>'$'+Math.round(v).toLocaleString('en-US');
+function pmt(loan,ratePct,years){const r=ratePct/100/12,k=years*12;if(k<=0)return 0;if(r===0)return loan/k;return loan*r/(1-Math.pow(1+r,-k));}
+function rows(el,list){el.innerHTML=list.map(([a,b])=>`<div class="row"><span>${a}</span><span>${b}</span></div>`).join('');}
+const css=getComputedStyle(document.documentElement);
+function buy(){
+  const price=n('b-price'),downPct=n('b-down'),down=price*downPct/100,loan=Math.max(price-down,0);
+  const pi=pmt(loan,n('b-rate'),n('b-term')),tax=price*n('b-tax')/100/12,ins=n('b-ins')/12,
+        pmi=downPct<20?loan*n('b-pmi')/100/12:0,hoa=n('b-hoa'),tot=pi+tax+ins+pmi+hoa;
+  $('b-total').innerHTML=usd(tot)+'<small> /mo</small>';
+  const parts=[['Principal + interest',pi,'var(--red)'],['Property tax',tax,'var(--muted)'],['Insurance',ins,'var(--good)'],['Mortgage insurance',pmi,'#c98a1b'],['HOA',hoa,'var(--ink)']];
+  $('b-bar').innerHTML=parts.filter(p=>p[1]>0).map(p=>`<i style="width:${tot?p[1]/tot*100:0}%;background:${p[2]}" title="${p[0]}"></i>`).join('');
+  rows($('b-rows'),parts.map(p=>[p[0],usd(p[1])]).concat([['Loan amount',usd(loan)]]));
+  $('b-cash').textContent=`Down payment ${usd(down)}. Plan on roughly 2–3% of the price more for closing costs.`;
+}
+function aff(){
+  const inc=n('a-inc')/12,debt=n('a-debt'),cash=n('a-cash'),rate=n('a-rate');
+  const maxHouse=Math.max(Math.min(inc*0.28,inc*0.36-debt),0);
+  const taxP=n('b-tax')/100/12,ins=n('b-ins')/12,pmiP=n('b-pmi')/100/12;
+  // monthly cost per dollar of price, given cash down: solve price by bisection
+  const cost=p=>{const loan=Math.max(p-cash,0),downPct=p?cash/p*100:100;return pmt(loan,rate,30)+p*taxP+ins+(downPct<20?loan*pmiP:0);};
+  let lo=0,hi=3e6;for(let i=0;i<60;i++){const m=(lo+hi)/2;cost(m)>maxHouse?hi=m:lo=m;}
+  const price=Math.floor(lo/1000)*1000;
+  $('a-price').textContent=price>0?usd(price):'$0';
+  rows($('a-rows'),[['Monthly income',usd(inc)],['House payment limit',usd(maxHouse)+' /mo'],['Down payment',usd(cash)+(price?` (${(cash/price*100).toFixed(1)}%)`:'')],['Loan amount',usd(Math.max(price-cash,0))]]);
+}
+function sell(){
+  const price=n('s-price'),comm=price*n('s-comm')/100,costs=[['Mortgage payoff',n('s-payoff')],['Commission',comm],['Title, deed, closing',n('s-title')],['Property tax at closing',n('s-tax')],['Repairs / credits',n('s-rep')]];
+  const net=price-costs.reduce((s,c)=>s+c[1],0);
+  $('s-net').textContent=(net<0?'-':'')+usd(Math.abs(net));
+  rows($('s-rows'),[['Sale price',usd(price)]].concat(costs.map(c=>[c[0],'− '+usd(c[1])])));
+}
+function all(){buy();aff();sell();}
+document.querySelectorAll('input').forEach(i=>i.addEventListener('input',all));
+document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  document.querySelectorAll('[role=tabpanel]').forEach(p=>p.hidden=p.id!==b.getAttribute('aria-controls'));
+}));
+all();
+</script>
+
+</body>
+</html>
